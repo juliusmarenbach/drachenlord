@@ -359,6 +359,8 @@ if (DRUCK){
   window.claude?.hot?.snapshot?.(() => ({i}));
   const start = (data) => show(Math.min(Math.max(+data?.i || 0, 0), SPREADS.length - 1), 1);
   window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+  /* Alle Bilder im Voraus laden, damit beim schnellen Blättern (iPad, Mobilfunk) keine weiße Seite aufblitzt */
+  setTimeout(() => SPREADS.forEach(s => { if (s.img){ const im = new Image(); im.src = s.img; } }), 800);
 
   /* Sternenhimmel */
   (() => {
