@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Der Drachenlord – ein Pixi-Buch von Max, Jaron und Franz zum Durchblättern.">
+<meta property="og:title" content="Der Drachenlord">
+<meta property="og:image" content="https://keytos.de/drachenlord/img/s00.jpg">
+<style>html,body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Der Drachenlord</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Luckiest+Guy&display=swap">
+<style>
+/* Layout: ein quadratisches Pixi-Büchlein auf Nachthimmel — Umschlag einzeln, dann 12 Doppelseiten (Bild über beide Seiten, Erzähler im
+   leicht durchsichtigen Kasten auf dem freien Feld, wörtliche Rede in Sprechblasen an den Figuren). Mit ?druck werden alle Bögen 26×13 cm
+   untereinander gesetzt (Bogen 1 = Rückseite links + Umschlag rechts) — daraus entsteht die PDF-Druckfassung. */
+:root{
+  --night:#1a2150;
+  --night-2:#2b3470;
+  --paper:#fffdf6;
+  --ink:#2a2238;
+  --steffi:#2fae9b;
+  --gundi:#e2603a;
+  --gold:#f4c342;
+  --star:#fff3b8;
+  --display:"Luckiest Guy","Arial Rounded MT Bold","Trebuchet MS",sans-serif;
+  --body:"Andika","Trebuchet MS",Verdana,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{
+  margin:0;background:var(--night);color:var(--paper);font-family:var(--body);
+  background-image:radial-gradient(ellipse at 50% -10%,var(--night-2),transparent 60%);
+  padding-inline:16px;
+}
+.stars{position:fixed;inset:0;pointer-events:none;z-index:0}
+.wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding-block:20px 28px;display:flex;flex-direction:column;align-items:center;gap:18px;min-height:100%;box-sizing:border-box}
+
+header.top{display:flex;align-items:baseline;justify-content:space-between;width:100%;gap:12px;flex-wrap:wrap}
+header.top h1{font-family:var(--display);font-weight:400;font-size:clamp(22px,3vw,30px);letter-spacing:.02em;margin:0;color:var(--gold);text-wrap:balance}
+header.top p{margin:0;font-size:15px;color:var(--star);opacity:.85}
+
+/* ---------- Buch ---------- */
+.stage{width:100%;display:flex;justify-content:center}
+.book{container-type:inline-size;width:100%;position:relative}
+.book.single{width:min(100%,560px)}
+.spread{display:flex;aspect-ratio:2/1;width:100%;border-radius:6px;overflow:hidden;
+  box-shadow:0 2px 0 4px #0002,0 24px 50px -10px #000a;background:var(--paper);position:relative}
+.book.single .spread{aspect-ratio:1/1;border-radius:4px 14px 14px 4px}
+.page{flex:1 1 50%;position:relative;overflow:hidden;--pw:50}
+.book.single .page{--pw:100}
+.page img{display:block;width:100%;height:100%;object-fit:cover}
+/* Falz in der Mitte */
+.spread.wide::after{content:"";position:absolute;top:0;bottom:0;left:50%;width:7%;transform:translateX(-50%);
+  background:linear-gradient(90deg,transparent,#0000001f 46%,#00000038 50%,#0000001f 54%,transparent);pointer-events:none;z-index:3}
+
+.pno{position:absolute;bottom:calc(var(--pw) * .03cqw);font:700 calc(var(--pw) * .028cqw)/1 var(--body);color:#fff;opacity:.9;text-shadow:0 1px 2px #0008;z-index:4}
+.pno.l{left:calc(var(--pw) * .04cqw)} .pno.r{right:calc(var(--pw) * .04cqw)}
+
+/* Bild über beide Seiten */
+.spread.wide .page{flex-basis:100%}
+.spread.wide img{object-position:50% 50%}
+/* Erzähler-Kasten: sitzt genau auf dem freien Feld im Bild, leicht durchsichtig */
+.panel{position:absolute;z-index:5;left:var(--bl,22%);top:var(--bt,4%);width:var(--bw,56%);height:var(--bh,36%);box-sizing:border-box;
+  display:flex;flex-direction:column;justify-content:center;overflow:hidden;
+  text-align:center;text-wrap:balance;color:var(--ink);background:rgba(255,253,246,.82);border:3px solid var(--ink);border-radius:1.4cqw;
+  padding:1.2cqw 2.2cqw;font-size:calc(50 * var(--fs,.046) * 1cqw);line-height:1.34;box-shadow:4px 5px 0 #0002;backdrop-filter:blur(2px)}
+.panel p{margin:0 0 .4em} .panel p:last-child{margin:0}
+.panel .ask{font-style:italic;color:#5a4a7a}
+/* Sprechblasen: Position --x/--y in % der Doppelseite, Breite --w in % der Breite, Schwänzchen per data-tail */
+.say{position:absolute;z-index:5;left:var(--x);top:var(--y);width:var(--w);box-sizing:border-box;margin:0;
+  background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:2.6cqw;padding:1.3cqw 1.5cqw 1.5cqw;
+  font-size:calc(50 * .042 * 1cqw);line-height:1.28;text-align:center;text-wrap:balance;hyphens:manual;box-shadow:3px 4px 0 #0002}
+.say .who{display:none}
+.say::after{content:"";position:absolute;z-index:-1;width:1.9cqw;height:1.9cqw;background:#fff;border-right:3px solid var(--ink);border-bottom:3px solid var(--ink);box-sizing:border-box}
+.say[data-tail="b"]::after{bottom:-1.3cqw;left:calc(var(--tx,50%) - .95cqw);transform:rotate(45deg)}
+.say[data-tail="bl"]::after{bottom:-1.3cqw;left:12%;transform:rotate(70deg) skew(15deg,15deg)}
+.say[data-tail="br"]::after{bottom:-1.3cqw;right:12%;transform:rotate(20deg) skew(-15deg,-15deg)}
+.say[data-tail="t"]::after{top:-1.3cqw;left:calc(var(--tx,50%) - .95cqw);transform:rotate(225deg)}
+.say[data-tail="tl"]::after{top:-1.3cqw;left:12%;transform:rotate(250deg) skew(15deg,15deg)}
+.say[data-tail="tr"]::after{top:-1.3cqw;right:12%;transform:rotate(200deg) skew(-15deg,-15deg)}
+.say[data-tail="l"]::after{left:-1.15cqw;top:calc(var(--ty,50%) - .95cqw);transform:rotate(135deg)}
+.say[data-tail="r"]::after{right:-1.15cqw;top:calc(var(--ty,50%) - .95cqw);transform:rotate(315deg)}
+
+/* Umschlag */
+.half{container-type:inline-size;position:relative;flex:1 1 50%;height:100%;overflow:hidden}
+.cover{position:relative;width:100%;height:100%}
+.cover img{position:absolute;inset:0}
+.cover .title{position:absolute;left:0;right:0;top:6%;text-align:center;z-index:2}
+.cover h2{font-family:var(--display);font-weight:400;margin:0;font-size:13cqw;line-height:.95;color:var(--gold);
+  -webkit-text-stroke:.5cqw var(--ink);paint-order:stroke fill;text-shadow:.6cqw .8cqw 0 var(--ink);letter-spacing:.02em;transform:rotate(-3deg)}
+.cover .by{position:absolute;left:4%;bottom:5%;z-index:2;background:var(--paper);color:var(--ink);font:700 3.6cqw/1.2 var(--body);
+  padding:1cqw 3cqw;border-radius:99px;border:.5cqw solid var(--ink)}
+.cover .badge{position:absolute;right:4%;bottom:4%;z-index:2;width:17cqw;height:17cqw;border-radius:50%;background:var(--gundi);
+  color:#fff;border:.6cqw solid var(--ink);display:grid;place-items:center;text-align:center;font:400 3.2cqw/1.05 var(--display);transform:rotate(10deg)}
+.spine{position:absolute;left:0;top:0;bottom:0;width:4%;background:linear-gradient(90deg,#0004,#0000);z-index:3}
+
+/* Rückseite */
+.back{height:100%;box-sizing:border-box;background:var(--steffi);color:var(--paper);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;gap:3.5cqw;padding:8cqw}
+.back h2{font-family:var(--display);font-weight:400;font-size:14cqw;margin:0;color:var(--gold);-webkit-text-stroke:.45cqw var(--ink);paint-order:stroke fill;text-shadow:.5cqw .6cqw 0 var(--ink)}
+.back p{margin:0;font-size:4.1cqw;line-height:1.4;max-width:30em}
+.back .credits{font-size:3.1cqw;opacity:.92;border-top:.4cqw dashed #fff8;padding-top:3cqw}
+.back .tooth{width:14cqw;height:auto}
+
+/* Blättern */
+.spread{transition:opacity .28s ease,transform .28s ease}
+.spread.leaving{opacity:0;transform:translateX(calc(var(--dir,1) * -2.5%)) rotateY(calc(var(--dir,1) * 4deg))}
+.spread.entering{opacity:0;transform:translateX(calc(var(--dir,1) * 2.5%))}
+@media (prefers-reduced-motion:reduce){.spread{transition:none}}
+
+.hit{position:absolute;top:0;bottom:0;width:50%;z-index:6;cursor:pointer;background:none;border:0;padding:0}
+.hit.prev{left:0;cursor:w-resize}.hit.next{right:0;cursor:e-resize}
+.hit:focus-visible{outline:3px dashed var(--gold);outline-offset:-6px}
+
+nav.ctrl{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center}
+nav.ctrl button{font:400 18px/1 var(--display);letter-spacing:.04em;color:var(--ink);background:var(--gold);border:3px solid var(--ink);
+  border-radius:14px;padding:12px 18px 9px;cursor:pointer;box-shadow:0 4px 0 var(--ink);transition:transform .08s}
+nav.ctrl button:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+nav.ctrl button:disabled{opacity:.35;cursor:default}
+nav.ctrl button:focus-visible{outline:3px solid var(--paper);outline-offset:3px}
+.where{font-size:16px;color:var(--star);min-width:11em;text-align:center;font-variant-numeric:tabular-nums}
+.dots{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.dots button{width:12px;height:12px;border-radius:50%;border:2px solid var(--star);background:transparent;padding:0;cursor:pointer}
+.dots button[aria-current="true"]{background:var(--gold);border-color:var(--gold)}
+.dots button:focus-visible{outline:2px solid var(--paper);outline-offset:2px}
+.hint{font-size:13px;color:var(--star);opacity:.6;margin:0;text-align:center}
+.hint a{color:var(--gold)}
+
+/* Handy: Bild oben, Erzähler und Sprechblasen darunter */
+@media (max-width:640px){
+  body:not(.druck) .spread{flex-direction:column;aspect-ratio:auto}
+  body:not(.druck) .page{--pw:100}
+  body:not(.druck) .spread.wide::after{display:none}
+  body:not(.druck) .spread.wide .page.img{aspect-ratio:16/10;flex:none}
+  body:not(.druck) .panel{position:static;width:auto;height:auto;overflow:visible;text-align:left;border:0;border-radius:0;box-shadow:none;backdrop-filter:none;
+    background:var(--tint,#fff6dc);font-size:calc(100 * .05 * 1cqw);padding:6cqw 7cqw 3cqw}
+  body:not(.druck) .says{background:var(--tint,#fff6dc);padding:0 7cqw 6cqw;display:flex;flex-direction:column;gap:2.5cqw}
+  body:not(.druck) .say{position:static;width:auto;text-align:left;font-size:calc(100 * .048 * 1cqw);border-width:2px;border-radius:5cqw;padding:2.5cqw 4cqw;box-shadow:none}
+  body:not(.druck) .say::after{display:none}
+  body:not(.druck) .say .who{display:inline;font-weight:700;color:var(--accent,var(--ink))}
+  .pno{display:none}
+  .hit{display:none}
+}
+
+/* Druckfassung: alle Bögen untereinander, je 26×13 cm */
+body.druck{background:#fff;padding:0;color-scheme:light}
+body.druck .stars,body.druck header.top,body.druck nav.ctrl,body.druck .dots,body.druck .hint{display:none}
+body.druck .wrap{max-width:none;padding:0;gap:0;display:block}
+body.druck .stage{display:block}
+body.druck .book{width:26cm;margin:0 auto;break-after:page;page-break-after:always}
+body.druck .spread{border-radius:0;box-shadow:none;transition:none;aspect-ratio:auto;height:13cm}
+body.druck .hit{display:none}
+@page{size:26cm 13cm;margin:0}
+@media print{body.druck .book{margin:0}}
+</style>
+</head>
+<body>
+
+<canvas class="stars" id="stars" aria-hidden="true"></canvas>
+<div class="wrap">
+  <header class="top">
+    <h1>Der Drachenlord</h1>
+    <p>Eine Geschichte von Max, Jaron und Franz</p>
+  </header>
+  <div class="stage"><div class="book" id="book"></div></div>
+  <nav class="ctrl" aria-label="Blättern">
+    <button id="prev" type="button">◀ Zurück</button>
+    <span class="where" id="where" aria-live="polite"></span>
+    <button id="next" type="button">Weiter ▶</button>
+  </nav>
+  <div class="dots" id="dots" role="group" aria-label="Seite wählen"></div>
+  <p class="hint">Blättern mit den Pfeiltasten, durch Tippen auf die linke oder rechte Buchseite oder durch Wischen.
+    · <a href="Der-Drachenlord-Druck.pdf">Druckfassung (PDF, 13×13 cm)</a> · <a href="motive.html">Motive &amp; Quellen</a></p>
+</div>
+
+<script>
+/* Sprechblase: who = Sprecher (nur in der Handy-Ansicht sichtbar), x/y/w in % der Doppelseite, tail = Richtung des Schwänzchens */
+const B = (who, text, x, y, w, tail, c, extra) => ({who, text, x, y, w, tail, c, extra});
+const ST = "var(--steffi)", GU = "var(--gundi)", MX = "#3a7bd5", KG = "#b8860b", MA = "#7a4fa0", AL = "#2a2238";
+
+const SPREADS = [
+  {kind:"cover"},
+  {img:"img/s01.jpg", box:[21.96,3.26,56.59,37.6], tint:"#ffeec4",
+   nar:`<p>Max ist 8 Jahre alt und liebt Drachengeschichten.</p>
+        <p>Heute Abend liegt er im Bett und liest sein Lieblingsbuch. Natürlich ein Buch über Drachen!</p>`,
+   say:[B("Max:","„Ich würde so gern einmal in der Drachenwelt leben!“",44,44,17,"l",MX,"--ty:45%")]},
+  {img:"img/s02.jpg", box:[21.85,3.26,56.44,37.52], tint:"#e9e2ff",
+   nar:`<p>Plötzlich wird alles dunkel. Dann glitzert und funkelt es. Schwupps! Max ist aus seinem Zimmer verschwunden.</p>
+        <p>Er steht auf einer Insel. Um ihn herum fliegen viele, viele Drachen. Max bekommt Angst und Heimweh.</p>
+        <p class="ask">Zähl mal: Wie viele Drachen siehst du?</p>`,
+   say:[B("Max:","„Wo bin ich?“",38.5,44,11,"bl",MX)]},
+  {img:"img/s03.jpg", box:[21.67,3.11,56.7,37.53], tint:"#d9f3ec",
+   nar:`<p>Ein Drache bemerkt Max und landet direkt vor ihm. Menschen kennt der Drache nur aus Geschichten.</p>`,
+   say:[B("Steffi:","„Hallo, ich bin Steffi! Und wer bist du?“",33,43,19,"bl",ST),
+        B("Max:","„Ich bin Max. Wo sind wir hier?“",83,43,14,"l",MX,"--ty:60%"),
+        B("Steffi:","„Wir sind in Großbritania, im Land der Drachen!“",1,60,17.5,"r",ST)]},
+  {img:"img/s04.jpg", box:[21.82,3.62,56.51,37.16], tint:"#dff0ff",
+   nar:`<p>Max klettert auf Steffis Rücken. Hui! Hoch über Bergen, Wäldern und glitzernden Seen fliegen sie dahin.</p>`,
+   say:[B("Max:","„Juhu! Ich fliege!“",2,52,11,"r",MX),
+        B("Steffi:","„Halt dich gut fest, Max! Ich zeige dir unser Königreich!“",34,58,20,"tl",ST)]},
+  {img:"img/s05.jpg", box:[22.11,2.74,56.69,37.83], tint:"#ffe3d6",
+   nar:`<p>Auf einer Blumenwiese wartet Steffis Freund Gundi. Steffi stellt ihm Max aus der Menschenwelt vor. Doch Gundi ist frech und mag keine Fremden.</p>
+        <p>Steffi schimpft: „Sei nicht so gemein! Max ist mein Gast.“</p>`,
+   say:[B("Gundi:","„Du dusseliger Drache! Was soll der hier?“",2,43,14,"br",GU),
+        B("Steffi:","„Gundi, das ist Max!“",88,50,11.5,"l",ST,"--ty:45%"),
+        B("Max:","„Hi, Gundi …“",53,58,12,"r",MX)]},
+  {img:"img/s06.jpg", box:[21.67,3.4,56.62,37.38], tint:"#e4f4cf",
+   nar:`<p>Die drei fliegen los zur Drachenschanze. Doch plötzlich zieht ein dichter, magischer Nebel auf.</p>
+        <p>Bei der Landung geraten sie in den dunklen Schattenwald.</p>`,
+   say:[B("Steffi:","„Bleibt dicht bei mir!“",36,44,12,"bl",ST),
+        B("Gundi:","„Ich sehe gar nichts mehr!“",58,44,14,"br",GU)]},
+  {img:"img/s07.jpg", box:[21.71,3.18,56.66,37.46], tint:"#fff1cf",
+   nar:`<p>Gundi stolpert in der Dunkelheit. Ein riesiger Felsen rollt herab und klemmt seinen Flügel ein!</p>
+        <p>Der Eingang zur Drachenhöhle wackelt und droht einzustürzen.</p>`,
+   say:[B("Gundi:","„Aua! Das tut weh! Ich kann mich nicht bewegen!“",31,42.5,25,"b",GU,"--tx:50%")]},
+  {img:"img/s08.jpg", box:[21.71,3.18,56.58,37.53], tint:"#e2efff",
+   nar:`<p>Max zögert keine Sekunde. Gundi war frech zu ihm, aber jetzt braucht er Hilfe! Max denkt an die mutigen Helden aus seinen Büchern.</p>
+        <p>Gemeinsam mit Steffi stemmt er den schweren Felsen hoch und zieht Gundi frei.</p>`,
+   say:[B("Max:","„Wir schaffen das! Auf drei: eins, zwei, drei!“",3,44,16,"br",MX),
+        B("Steffi:","„Ich halte ihn! Zieh, Max!“",80,44,14,"bl",ST)]},
+  {img:"img/s09.jpg", box:[21.74,3.4,56.55,37.24], tint:"#ffe0ea",
+   nar:`<p>Puh! Alle sind in Sicherheit. Der Nebel verschwindet und die Sonne kommt zurück. Gundi bewegt vorsichtig seinen Flügel.</p>`,
+   say:[B("Gundi:","„Danke, Max … Es tut mir leid, dass ich so böse zu dir war.“",2,43,15,"br",GU),
+        B("Max:","„Alles gut, Gundi. Wir halten zusammen!“",48,43,14,"bl",MX)]},
+  {img:"img/s10.jpg", box:[21.96,2.74,57.21,37.75], tint:"#fff0c2",
+   nar:`<p>Da kommt Gundis Vater, der Drachenkönig. Er ist der älteste Drache und der Anführer von allen. Er schenkt Max einen echten Drachenzahn.</p>`,
+   say:[B("Drachenkönig:","„Danke, dass du meinem Sohn geholfen hast! Ab heute bist du unser Drachenlord!“",42,45,20,"r",KG,"--ty:60%")]},
+  {img:"img/s11.jpg", box:[33.15,14.68,33.73,26.03], tint:"#fff3d1",
+   nar:`<p>Alle Drachen feiern ein großes Fest für Max. Es gibt Kuchen, Musik und ein buntes Drachenfeuerwerk. „Hoch lebe der Drachenlord!“, rufen alle.</p>
+        <p class="ask">Findest du Gundi im Bild?</p>`,
+   say:[]},
+  {img:"img/s12.jpg", box:[22.43,2.67,56.77,37.97], tint:"#dcefff",
+   nar:`<p>Max reibt sich die Augen. War alles nur ein Traum?</p>
+        <p>Da zeigt Mama auf das Fensterbrett. Max strahlt: Es war echt!</p>`,
+   say:[B("Mama:","„Max, aufwachen!“",58,43,15,"br",MA),
+        B("Mama:","„Nanu? Was ist das für ein Zahn?“",47,61,17.5,"r",MA),
+        B("Max:","„Es war echt!“",2,44,11,"br",MX)]},
+  {kind:"back"}
+];
+
+const DRUCK = /\bdruck\b/.test(location.search);
+if (DRUCK) document.body.classList.add("druck");
+
+const book = document.getElementById("book");
+const where = document.getElementById("where");
+const dots = document.getElementById("dots");
+const prevB = document.getElementById("prev"), nextB = document.getElementById("next");
+let i = 0, busy = false;
+
+const coverHTML = () => `<div class="half"><div class="cover">
+      <img src="img/s00.jpg" alt="Max fliegt auf dem Drachen Steffi über das Drachenland, Gundi fliegt daneben.">
+      <div class="spine"></div>
+      <div class="title"><h2>Der<br>Drachenlord</h2></div><span class="by">von Max, Jaron &amp; Franz</span>
+      <div class="badge">Mit<br>Drachen-<br>zahn!</div></div></div>`;
+const backHTML = () => `<div class="half"><div class="back">
+      <h2>Ende</h2>
+      <svg class="tooth" viewBox="0 0 60 80" aria-hidden="true"><path d="M8 6 Q30 -2 52 6 Q56 30 40 70 Q34 80 30 66 Q26 80 20 70 Q4 30 8 6Z" fill="#fffdf6" stroke="#2a2238" stroke-width="4" stroke-linejoin="round"/></svg>
+      <p>Max wünscht sich in die Drachenwelt. Dort trifft er die freundliche Steffi und den frechen Gundi. Als ein Felsen Gundis Flügel einklemmt, zögert Max nicht lange …</p>
+      <p>Eine Geschichte über Mut, Zusammenhalt und Verzeihen. Für Kinder ab 4 Jahren.</p>
+      <p class="credits">Geschichte: Max, Jaron und Franz<br>Bilder: mit KI gestaltet (Higgsfield)</p></div></div>`;
+const sayHTML = s => `<p class="say" data-tail="${s.tail}" style="--x:${s.x}%;--y:${s.y}%;--w:${s.w}%;--accent:${s.c};${s.extra||""}"><span class="who">${s.who}</span> ${s.text}</p>`;
+
+function render(k){
+  const s = SPREADS[k];
+  const el = document.createElement("div");
+  book.classList.toggle("single", s.kind === "cover" || s.kind === "back");
+  if (s.kind === "cover"){
+    el.className = "spread"; el.innerHTML = `<div class="page">${coverHTML()}</div>`;
+  } else if (s.kind === "back"){
+    el.className = "spread"; el.innerHTML = `<div class="page">${backHTML()}</div>`;
+  } else {
+    el.className = "spread wide";
+    el.innerHTML = `<div class="page img"><img src="${s.img}" alt=""></div>
+      <div class="panel" style="--tint:${s.tint};--bl:${s.box[0]}%;--bt:${s.box[1]}%;--bw:${s.box[2]}%;--bh:${s.box[3]}%">${s.nar}</div>
+      <div class="says" style="--tint:${s.tint}">${(s.say||[]).map(sayHTML).join("")}</div>
+      <span class="pno l" style="--pw:50">${k*2}</span><span class="pno r" style="--pw:50">${k*2+1}</span>`;
+  }
+  if (s.kind !== "cover" && s.kind !== "back"){
+    el.insertAdjacentHTML("beforeend", `<button class="hit prev" type="button" aria-label="Zurückblättern"></button><button class="hit next" type="button" aria-label="Weiterblättern"></button>`);
+  } else {
+    el.insertAdjacentHTML("beforeend", `<button class="hit ${s.kind==="cover"?"next":"prev"}" type="button" style="width:100%" aria-label="${s.kind==="cover"?"Buch aufschlagen":"Zurückblättern"}"></button>`);
+  }
+  el.querySelectorAll(".hit").forEach(b => b.addEventListener("click", () => go(b.classList.contains("next") ? 1 : -1)));
+  return el;
+}
+
+/* Erzähler-Text notfalls verkleinern, bis er in den Kasten passt */
+function fit(el){
+  if (!DRUCK && matchMedia("(max-width:640px)").matches) return;
+  el.querySelectorAll(".panel").forEach(t => {
+    let fs = .046, guard = 0;
+    t.style.setProperty("--fs", fs);
+    while (t.scrollHeight > t.clientHeight + 1 && fs > .028 && guard++ < 40){ fs -= .002; t.style.setProperty("--fs", fs.toFixed(3)); }
+  });
+}
+
+function label(k){
+  if (k === 0) return "Umschlag";
+  if (k === SPREADS.length - 1) return "Rückseite";
+  return `Doppelseite ${k} von 12`;
+}
+function show(k, dir){
+  const el = render(k);
+  const old = book.firstElementChild;
+  const reduce = matchMedia("(prefers-reduced-motion:reduce)").matches;
+  if (old && !reduce){
+    busy = true;
+    old.style.setProperty("--dir", dir); old.classList.add("leaving");
+    setTimeout(() => {
+      book.replaceChildren(el); fit(el);
+      el.style.setProperty("--dir", dir); el.classList.add("entering");
+      requestAnimationFrame(() => requestAnimationFrame(() => { el.classList.remove("entering"); busy = false; }));
+    }, 240);
+  } else { book.replaceChildren(el); fit(el); }
+  i = k;
+  where.textContent = label(k);
+  prevB.disabled = k === 0; nextB.disabled = k === SPREADS.length - 1;
+  [...dots.children].forEach((d, j) => d.setAttribute("aria-current", j === k ? "true" : "false"));
+  [k+1, k+2].forEach(n => { const s = SPREADS[n]; if (s && s.img){ const im = new Image(); im.src = s.img; } });
+}
+function go(d){ if (busy) return; const k = i + d; if (k < 0 || k >= SPREADS.length) return; show(k, d); }
+
+/* Druckfassung: Bogen 1 = Rückseite + Umschlag, dann die 12 Doppelseiten */
+function renderDruck(){
+  const stage = book.parentElement;
+  book.remove();
+  const sheet = document.createElement("div"); sheet.className = "book";
+  sheet.innerHTML = `<div class="spread"><div class="page" style="display:flex">${backHTML()}${coverHTML()}</div></div>`;
+  stage.appendChild(sheet);
+  SPREADS.forEach((s, k) => {
+    if (!s.img) return;
+    const b = document.createElement("div"); b.className = "book";
+    b.appendChild(render(k)); b.querySelectorAll(".hit").forEach(h => h.remove());
+    stage.appendChild(b);
+  });
+  const all = () => stage.querySelectorAll(".book").forEach(fit);
+  all(); document.fonts?.ready.then(all);
+}
+
+if (DRUCK){
+  renderDruck();
+} else {
+  SPREADS.forEach((_, j) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.setAttribute("aria-label", label(j));
+    b.addEventListener("click", () => { if (j !== i && !busy) show(j, j > i ? 1 : -1); });
+    dots.appendChild(b);
+  });
+  prevB.onclick = () => go(-1); nextB.onclick = () => go(1);
+  addEventListener("keydown", e => { if (e.key === "ArrowRight") go(1); if (e.key === "ArrowLeft") go(-1); });
+  let tx = null;
+  book.addEventListener("touchstart", e => { tx = e.touches[0].clientX; }, {passive:true});
+  book.addEventListener("touchend", e => { if (tx === null) return; const dx = e.changedTouches[0].clientX - tx; if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1); tx = null; });
+  addEventListener("resize", () => { const el = book.firstElementChild; if (el) fit(el); });
+  document.fonts?.ready.then(() => { const el = book.firstElementChild; if (el) fit(el); });
+
+  window.claude?.hot?.snapshot?.(() => ({i}));
+  const start = (data) => show(Math.min(Math.max(+data?.i || 0, 0), SPREADS.length - 1), 1);
+  window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+
+  /* Sternenhimmel */
+  (() => {
+    const c = document.getElementById("stars"), x = c.getContext("2d");
+    const draw = () => {
+      const dpr = devicePixelRatio || 1; c.width = innerWidth * dpr; c.height = innerHeight * dpr;
+      c.style.width = innerWidth + "px"; c.style.height = innerHeight + "px";
+      x.scale(dpr, dpr); let seed = 7; const r = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+      for (let n = 0; n < 140; n++){ x.fillStyle = `rgba(255,243,184,${.25 + r()*.6})`; x.beginPath(); x.arc(r()*innerWidth, r()*innerHeight, .5 + r()*1.4, 0, 7); x.fill(); }
+    };
+    draw(); addEventListener("resize", draw);
+  })();
+}
+</script>
+</body>
+</html>
