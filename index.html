@@ -180,6 +180,9 @@ body.druck .hit{display:none}
 const B = (who, text, x, y, w, tail, c, extra) => ({who, text, x, y, w, tail, c, extra});
 const ST = "var(--steffi)", GU = "var(--gundi)", MX = "#3a7bd5", KG = "#b8860b", MA = "#7a4fa0", AL = "#2a2238";
 
+/* Versionskennung an den Bildadressen: zwingt iPad/Handy nach einer Bildänderung zum Neuladen statt Zwischenspeicher */
+const IMGV = "?v=12";
+
 const SPREADS = [
   {kind:"cover"},
   {img:"img/s01.jpg", box:[21.96,3.26,56.59,37.6], tint:"#ffeec4",
@@ -227,7 +230,7 @@ const SPREADS = [
   {img:"img/s10.jpg", box:[21.96,2.74,57.21,37.75], tint:"#fff0c2",
    nar:`<p>Da kommt Gundis Vater, der Drachenkönig. Er ist der älteste Drache und der Anführer von allen. Er schenkt Max einen echten Drachenzahn.</p>`,
    say:[B("Drachenkönig:","„Danke, dass du meinem Sohn geholfen hast! Ab heute bist du unser Drachenlord!“",42,45,20,"r",KG,"--ty:60%")]},
-  {img:"img/s11.jpg", box:[33.23,14.46,33.65,26.18], tint:"#fff3d1",
+  {img:"img/s11.jpg", box:[33.23,14.39,33.62,26.25], tint:"#fff3d1",
    nar:`<p>Alle Drachen feiern ein großes Fest für Max. Es gibt Kuchen, Musik und ein buntes Drachenfeuerwerk. „Hoch lebe der Drachenlord!“, rufen alle.</p>
         <p class="ask">Findest du Gundi im Bild? Er hat ein Pflaster auf dem Flügel.</p>`,
    say:[]},
@@ -272,7 +275,7 @@ function render(k){
     el.className = "spread"; el.innerHTML = `<div class="page">${backHTML()}</div>`;
   } else {
     el.className = "spread wide";
-    el.innerHTML = `<div class="page img"><img src="${s.img}" alt=""></div>
+    el.innerHTML = `<div class="page img"><img src="${s.img}${IMGV}" alt=""></div>
       <div class="panel" style="--tint:${s.tint};--bl:${s.box[0]}%;--bt:${s.box[1]}%;--bw:${s.box[2]}%;--bh:${s.box[3]}%">${s.nar}</div>
       <div class="says" style="--tint:${s.tint}">${(s.say||[]).map(sayHTML).join("")}</div>
       <span class="pno l" style="--pw:50">${k*2}</span><span class="pno r" style="--pw:50">${k*2+1}</span>`;
@@ -318,7 +321,7 @@ function show(k, dir){
   where.textContent = label(k);
   prevB.disabled = k === 0; nextB.disabled = k === SPREADS.length - 1;
   [...dots.children].forEach((d, j) => d.setAttribute("aria-current", j === k ? "true" : "false"));
-  [k+1, k+2].forEach(n => { const s = SPREADS[n]; if (s && s.img){ const im = new Image(); im.src = s.img; } });
+  [k+1, k+2].forEach(n => { const s = SPREADS[n]; if (s && s.img){ const im = new Image(); im.src = s.img + IMGV; } });
 }
 function go(d){ if (busy) return; const k = i + d; if (k < 0 || k >= SPREADS.length) return; show(k, d); }
 
@@ -360,7 +363,7 @@ if (DRUCK){
   const start = (data) => show(Math.min(Math.max(+data?.i || 0, 0), SPREADS.length - 1), 1);
   window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
   /* Alle Bilder im Voraus laden, damit beim schnellen Blättern (iPad, Mobilfunk) keine weiße Seite aufblitzt */
-  setTimeout(() => SPREADS.forEach(s => { if (s.img){ const im = new Image(); im.src = s.img; } }), 800);
+  setTimeout(() => SPREADS.forEach(s => { if (s.img){ const im = new Image(); im.src = s.img + IMGV; } }), 800);
 
   /* Sternenhimmel */
   (() => {
